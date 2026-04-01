@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: conduit_db
+    restart: always
+    environment:
+      POSTGRES_USER: conduit
+      POSTGRES_PASSWORD: conduit
+      POSTGRES_DB: conduit
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: conduit_backend
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      PORT: 3001
+      DATABASE_URL: postgres://conduit:conduit@postgres:5432/conduit
+      JWT_KEY: supersecretkey_example
+      DEV_DB_USERNAME: conduit
+      DEV_DB_PASSWORD: conduit
+      DEV_DB_NAME: conduit
+      DEV_DB_HOSTNAME: postgres
+      DEV_DB_DIALECT: postgres
+      DEV_DB_LOGGGIN: "true"
+    ports:
+      - "3001:3001"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: conduit_frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  postgres_data:
